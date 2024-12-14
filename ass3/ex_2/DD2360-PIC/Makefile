@@ -1,11 +1,9 @@
-# From https://x.momo86.net/?p=29
-
-CXX=g++
-CXXFLAGS=-std=c++11 -I./include -O3 -g -Xcompiler -Wall
+CXX=g++-13
+CXXFLAGS=-std=c++11 -I./include -O3 -g -Xcompiler="-Wall -fPIE"
 
 NVCC=nvcc
-ARCH=sm_30
-NVCCFLAGS= -I./include -arch=$(ARCH) -std=c++11 -O3 -g -Xcompiler -Wall --compiler-bindir=$(CXX)
+ARCH=sm_89
+NVCCFLAGS= -I./include -arch=$(ARCH) -std=c++11 -O3 -g -Xcompiler="-Wall -fPIE" --compiler-bindir=$(CXX)
 
 SRCDIR=src
 SRCS=$(shell find $(SRCDIR) -name '*.cu' -o -name '*.cpp')
@@ -28,13 +26,15 @@ ${BIN}:
 $(BIN)/$(TARGET): $(OBJS)
 	$(NVCC) $(NVCCFLAGS) $+ -o $@
 
-$(SRCDIR)/%.o: $(SRCDIR)/%.cu
+$(OBJDIR)/%.o: $(SRCDIR)/%.cu
+	[ -d $(OBJDIR) ] || mkdir -p $(OBJDIR)
 	$(NVCC) $(NVCCFLAGS) $< -c -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	[ -d $(OBJDIR) ] || mkdir $(OBJDIR)
+	[ -d $(OBJDIR) ] || mkdir -p $(OBJDIR)
 	$(NVCC) $(CXXFLAGS) $< -c -o $@
 
 clean:
 	rm -rf $(OBJS)
-	rm -rf $(TARGET)
+	rm -rf $(BIN)/$(TARGET)
+	rm -rf $(BIN)
